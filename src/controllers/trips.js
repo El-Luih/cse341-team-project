@@ -2,7 +2,6 @@ import {
   getTripById as findTripById,
   getAllTrips as findAllTrips
 } from '../models/trips.js';
-import { getDb } from '../db/connect.js';
 
 export async function getTripById(req, res) {
   try {
@@ -44,11 +43,6 @@ export async function renderTripDetails(req, res, next) {
       error.status = 404;
       throw error;
     }
-
-    details.schedules = await getDb()
-      .collection('schedules')
-      .find({ tripId: req.params.tripId })
-      .toArray();
 
     return res.render('trips/details', {
       title: 'Trip Details',

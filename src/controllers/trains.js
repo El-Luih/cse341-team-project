@@ -3,6 +3,7 @@ import {
   getTrainById as findTrainById,
   getAllTrains as findAllTrains,
 } from "../models/trains.js";
+import { getDb } from '../db/connect.js';
 
 export async function getTrainById(req, res) {
   try {
@@ -39,3 +40,16 @@ export async function getAllTrains(req, res) {
     });
   }
 }
+
+export const trainsPage = (req, res) => {
+  res.render('trains', { title: 'Trains' });
+};
+
+export const trainsApi = async (req, res, next) => {
+  try {
+    const trains = await getDb().collection('trains').find({}).toArray();
+    return res.json({ trains });
+  } catch (error) {
+    return next(error);
+  }
+};

@@ -154,7 +154,133 @@ const hookTripsCatalog = async () => {
     }
 };
 
+const renderTripSchedules = (schedules) => {
+    const listEl = document.getElementById('trip-schedules');
+    if (!listEl) return;
+
+    const fragment = document.createDocumentFragment();
+
+    schedules.forEach((schedule) => {
+        const card = document.createElement('div');
+        card.className = 'schedule-card';
+
+        const times = document.createElement('div');
+        times.className = 'schedule-times';
+
+        const departure = document.createElement('div');
+        departure.className = 'time-block';
+        departure.innerHTML = '<span class="time-label">Departs</span>';
+        const departureTime = document.createElement('span');
+        departureTime.className = 'time-value';
+        departureTime.textContent = schedule.departureTime;
+        departure.appendChild(departureTime);
+
+        const arrow = document.createElement('span');
+        arrow.className = 'time-arrow';
+        arrow.textContent = '→';
+
+        const arrival = document.createElement('div');
+        arrival.className = 'time-block';
+        arrival.innerHTML = '<span class="time-label">Arrives</span>';
+        const arrivalTime = document.createElement('span');
+        arrivalTime.className = 'time-value';
+        arrivalTime.textContent = schedule.arrivalTime;
+        arrival.appendChild(arrivalTime);
+
+        times.append(departure, arrow, arrival);
+
+        const days = document.createElement('div');
+        days.className = 'schedule-days';
+        (schedule.daysOfWeek || []).forEach((day) => {
+            const badge = document.createElement('span');
+            badge.className = 'day-badge';
+            badge.textContent = day.substring(0, 3);
+            days.appendChild(badge);
+        });
+
+        const link = document.createElement('a');
+        link.className = 'book-btn';
+        link.href = `/trips/booking/${schedule.id}`;
+        link.textContent = 'Book Now';
+
+        card.append(times, days, link);
+        fragment.appendChild(card);
+    });
+
+    listEl.replaceChildren(fragment);
+};
+
+const loadTripSchedules = async (month) => {
+    const monthsContainer = document.getElementById('schedule-months');
+    const listEl = document.getElementById('trip-schedules');
+    if (!monthsContainer || !listEl) return;
+
+    const loadingEl = document.getElementById('schedules-loading');
+    const errorEl = document.getElementById('schedules-error');
+    const emptyEl = document.getElementById('schedules-empty');
+    const tripId = monthsContainer.dataset.tripId;
+    const url = month
+        ? `/api/trips/${encodeURIComponent(tripId)}/schedules?month=${encodeURIComponent(month)}`
+        : `/api/trips/${encodeURIComponent(tripId)}/schedules`;
+
+    if (loadingEl) loadingEl.hidden = false;
+    if (errorEl) errorEl.hidden = true;
+    if (emptyEl) emptyEl.hidden = true;
+
+    try {
+        const response = await fetch(url);
+        if (response.status === 404) {
+            listEl.replaceChildren();
+            if (loadingEl) loadingEl.hidden = true;
+            if (emptyEl) {
+                const monthName = month
+                    ? monthsContainer.querySelector(`[data-month="${month}"]`)?.textContent
+                    : null;
+                emptyEl.textContent = monthName
+                    ? `No schedules are available for ${monthName}.`
+                    : 'No schedules are available for this trip.';
+                emptyEl.hidden = false;
+            }
+            return;
+        }
+        if (!response.ok) {
+            throw new Error(`Failed to load schedules (${response.status})`);
+        }
+
+        const schedules = await response.json();
+        renderTripSchedules(schedules);
+        if (loadingEl) loadingEl.hidden = true;
+    } catch (error) {
+        listEl.replaceChildren();
+        if (loadingEl) loadingEl.hidden = true;
+        if (errorEl) {
+            errorEl.hidden = false;
+            errorEl.textContent = 'Unable to load schedules right now. Please try again.';
+        }
+    }
+};
+
+const hookTripSchedules = () => {
+    const monthsContainer = document.getElementById('schedule-months');
+    if (!monthsContainer) return;
+
+    monthsContainer.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-month]');
+        if (!button) return;
+
+        monthsContainer.querySelectorAll('[data-month]').forEach((monthButton) => {
+            monthButton.classList.toggle('active', monthButton === button);
+            monthButton.setAttribute('aria-pressed', String(monthButton === button));
+        });
+
+        loadTripSchedules(button.dataset.month);
+    });
+
+    loadTripSchedules();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     hookTrainsCatalog();
     hookTripsCatalog();
+    hookTripSchedules();
 });

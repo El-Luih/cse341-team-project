@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { trainsApi } from './trains.js';
+import { trainsApi } from '../controllers/trains.js';
 import { getTripById, getAllTrips } from '../controllers/trips.js';
+import { getSchedulesForTrip, getSchedulesForTripAndMonth } from '../controllers/schedules.js';
 
 const router = Router();
 
@@ -65,5 +66,43 @@ router.get('/api/trips', getAllTrips);
  *         description: Unexpected server or database error
  */
 router.get('/api/trips/:id', getTripById);
+
+/**
+ * @swagger
+ * /api/trips/{id}/schedules:
+ *   get:
+ *     summary: Retrieve schedules for a trip
+ *     description: Returns all schedules for the trip when month is omitted, or schedules applicable to the specified month when called as /api/trips/{id}/schedules?month={month}.
+ *     tags:
+ *       - Schedules
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: month
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 12
+ *     responses:
+ *       200:
+ *         description: An array of schedule records
+ *       400:
+ *         description: Invalid month value
+ *       404:
+ *         description: No schedules found for the trip or month
+ *       500:
+ *         description: Unexpected server or database error
+ */
+router.get('/api/trips/:id/schedules', (req, res) => {
+  if (req.query.month !== undefined) {
+    return getSchedulesForTripAndMonth(req, res);
+  }
+  return getSchedulesForTrip(req, res);
+});
 
 export default router;

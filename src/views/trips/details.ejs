@@ -60,42 +60,22 @@
         </div>
 
         <div class="route-operating">
-            <h2>Operating Schedule</h2>
-            <div class="months-grid">
-                <% details.operatingMonths.forEach(function(month) { %>
-                <span class="month-badge"><%= month %></span>
+            <h2>Operating Schedule by Month</h2>
+            <div class="months-grid" id="schedule-months" data-trip-id="<%= details.id %>">
+                <% const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; %>
+                <% monthNames.forEach(function(monthName, index) { %>
+                <button type="button" class="month-badge" data-month="<%= index + 1 %>" aria-pressed="false"><%= monthName %></button>
                 <% }); %>
             </div>
         </div>
 
-        <% if (details.schedules && details.schedules.length > 0) { %>
         <div class="route-schedules">
             <h2>Available Schedules</h2>
-            <div class="schedules-grid">
-                <% details.schedules.forEach(function(schedule) { %>
-                <div class="schedule-card">
-                    <div class="schedule-times">
-                        <div class="time-block">
-                            <span class="time-label">Departs</span>
-                            <span class="time-value"><%= schedule.departureTime %></span>
-                        </div>
-                        <span class="time-arrow">→</span>
-                        <div class="time-block">
-                            <span class="time-label">Arrives</span>
-                            <span class="time-value"><%= schedule.arrivalTime %></span>
-                        </div>
-                    </div>
-                    <div class="schedule-days">
-                        <% schedule.daysOfWeek.forEach(function(day) { %>
-                        <span class="day-badge"><%= day.substring(0, 3) %></span>
-                        <% }); %>
-                    </div>
-                    <a href="/trips/booking/<%= schedule.id %>" class="book-btn">Book Now</a>
-                </div>
-                <% }); %>
-            </div>
+            <div id="schedules-loading">Loading schedules...</div>
+            <div id="schedules-error" class="trips-error" hidden></div>
+            <p id="schedules-empty" hidden></p>
+            <div class="schedules-grid" id="trip-schedules"></div>
         </div>
-        <% } %>
     </div>
 </article>
 

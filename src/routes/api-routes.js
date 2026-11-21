@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { trainsApi } from '../controllers/trains.js';
 import { getTripById, getAllTrips } from '../controllers/trips.js';
 import { getSchedulesForTrip, getSchedulesForTripAndMonth } from '../controllers/schedules.js';
+import { getAllBookings, processBookingRequest } from '../controllers/bookings.js';
 
 const router = Router();
 
@@ -104,5 +105,70 @@ router.get('/api/trips/:id/schedules', (req, res) => {
   }
   return getSchedulesForTrip(req, res);
 });
+
+/**
+ * @swagger
+ * /api/bookings:
+ *   get:
+ *     summary: Retrieve all bookings
+ *     tags:
+ *       - Bookings
+ *     responses:
+ *       200:
+ *         description: An array of booking records
+ *       500:
+ *         description: Unexpected server or database error
+ *   post:
+ *     summary: Create a booking
+ *     tags:
+ *       - Bookings
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - scheduleId
+ *               - tripId
+ *               - ticketClass
+ *               - selectedDay
+ *               - passengers
+ *             properties:
+ *               scheduleId:
+ *                 type: integer
+ *               tripId:
+ *                 type: string
+ *               ticketClass:
+ *                 type: string
+ *               selectedDay:
+ *                 type: string
+ *               passengers:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 8
+ *                 items:
+ *                   type: object
+ *                   required: [firstName, lastName, email, phone]
+ *                   properties:
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                       format: email
+ *                     phone:
+ *                       type: string
+ *     responses:
+ *       201:
+ *         description: Booking created
+ *       400:
+ *         description: Invalid booking data or references
+ *       500:
+ *         description: Unexpected server or database error
+ */
+router.get('/api/bookings', getAllBookings);
+router.post('/api/bookings', processBookingRequest);
 
 export default router;

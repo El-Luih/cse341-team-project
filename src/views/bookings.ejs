@@ -1,0 +1,37 @@
+<%- include('./partials/header') %>
+<section class="bookings-admin">
+    <h1>Bookings</h1>
+    <p id="bookings-loading">Loading bookings...</p>
+    <p id="bookings-error" role="alert" hidden></p>
+    <p id="bookings-empty" hidden>No bookings have been made yet.</p>
+    <div class="bookings-table-wrap" id="bookings-table-wrap" hidden>
+        <table class="bookings-table">
+            <thead>
+                <tr>
+                    <th scope="col">Reference</th>
+                    <th scope="col">Booked</th>
+                    <th scope="col">Trip</th>
+                    <th scope="col">Schedule</th>
+                    <th scope="col">Ticket</th>
+                    <th scope="col">Travel day</th>
+                    <th scope="col">Passengers</th>
+                </tr>
+            </thead>
+            <tbody id="bookings-list"></tbody>
+        </table>
+    </div>
+</section>
+
+<template id="booking-row-template">
+    <tr>
+        <th scope="row" data-field="reference"></th>
+        <td data-field="created"></td>
+        <td data-field="trip"></td>
+        <td data-field="schedule"></td>
+        <td data-field="ticket"></td>
+        <td data-field="day"></td>
+        <td data-field="passengers"></td>
+    </tr>
+</template>
+
+<%- include('./partials/footer') %>

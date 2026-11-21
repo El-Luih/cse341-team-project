@@ -1,68 +1,77 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const tripSchema = new mongoose.Schema(
   {
         id: {
-          type: String,
-          required: true,
-          unique: true,
-          trim: true
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
         },
         name: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
         },
-        description: { 
-            type: String, 
+        description: {
+            type: String,
             required: false,
-            trim: true
+            trim: true,
         },
-        region: { 
-            type: String, 
+        region: {
+            type: String,
             required: true,
-            trim: true
+            trim: true,
         },
-        startStation: { 
-            type: String, 
+        startStation: {
+            type: String,
             required: true,
-            trim: true
+            trim: true,
         },
-        endStation: { 
-            type: String, 
+        endStation: {
+            type: String,
             required: true,
-            trim: true
+            trim: true,
         },
-        duration: { 
-            type: String, 
+        duration: {
+            type: String,
             required: true,
-            trim: true
+            trim: true,
         },
-        distance: { 
-            type: Number, 
-            required: true, min: 0
+        distance: {
+            type: Number,
+            required: true,
+            min: 0,
         },
-        highlights: [{ 
-            type: String, 
-            trim: true
-        }],
-        bestSeason: { 
-            type: String, 
-            required: true, trim: true
+        highlights: [
+            {
+                type: String,
+                trim: true,
+            },
+        ],
+        bestSeason: {
+            type: String,
+            required: true,
+            trim: true,
         },
-        operatingMonths: [{ 
-            type: Number, 
-            min: 1, max: 12
-        }],
-        imageUrl: { 
-            type: String, 
+        operatingMonths: [
+            {
+                type: Number,
+                min: 1,
+                max: 12,
+            },
+        ],
+        imageUrl: {
+            type: String,
             required: false,
-            trim: true
-        }
+            trim: true,
+        },
   },
-  { timestamps: true }
+    {
+        timestamps: true,
+    }
 );
 
-const Trip = mongoose.models.Trip || mongoose.model('Trip', tripSchema);
+const Trip = mongoose.models.Trip || mongoose.model("Trip", tripSchema);
 
 export default Trip;

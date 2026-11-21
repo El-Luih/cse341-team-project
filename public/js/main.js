@@ -200,7 +200,7 @@ const renderTripSchedules = (schedules) => {
 
         const link = document.createElement('a');
         link.className = 'book-btn';
-        link.href = `/trips/booking/${schedule.id}`;
+        link.href = `/trips/bookings/schedule/${schedule.id}`;
         link.textContent = 'Book Now';
 
         card.append(times, days, link);
@@ -279,8 +279,55 @@ const hookTripSchedules = () => {
     loadTripSchedules();
 };
 
+const hookBookingsAdmin = async () => {
+    const listEl = document.getElementById('bookings-list');
+    const templateEl = document.getElementById('booking-row-template');
+    if (!listEl || !templateEl) return;
+
+    const loadingEl = document.getElementById('bookings-loading');
+    const errorEl = document.getElementById('bookings-error');
+    const emptyEl = document.getElementById('bookings-empty');
+    const tableWrap = document.getElementById('bookings-table-wrap');
+
+    try {
+        const response = await fetch('/api/bookings');
+        if (!response.ok) {
+            throw new Error(`Failed to load bookings (${response.status})`);
+        }
+
+        const bookings = await response.json();
+        const fragment = document.createDocumentFragment();
+
+        bookings.forEach((booking) => {
+            const row = templateEl.content.cloneNode(true);
+            row.querySelector('[data-field="reference"]').textContent = booking.id;
+            row.querySelector('[data-field="created"]').textContent = new Date(booking.createdAt).toLocaleDateString();
+            row.querySelector('[data-field="trip"]').textContent = booking.tripId;
+            row.querySelector('[data-field="schedule"]').textContent = booking.scheduleId;
+            row.querySelector('[data-field="ticket"]').textContent = booking.ticketClass;
+            row.querySelector('[data-field="day"]').textContent = booking.selectedDay;
+            row.querySelector('[data-field="passengers"]').textContent = (booking.passengers || [])
+                .map((passenger) => `${passenger.firstName} ${passenger.lastName} (${passenger.email})`)
+                .join(', ');
+            fragment.appendChild(row);
+        });
+
+        listEl.replaceChildren(fragment);
+        if (tableWrap) tableWrap.hidden = bookings.length === 0;
+        if (emptyEl) emptyEl.hidden = bookings.length !== 0;
+        if (loadingEl) loadingEl.hidden = true;
+    } catch (error) {
+        if (loadingEl) loadingEl.hidden = true;
+        if (errorEl) {
+            errorEl.hidden = false;
+            errorEl.textContent = 'Unable to load bookings right now. Please try again.';
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     hookTrainsCatalog();
     hookTripsCatalog();
     hookTripSchedules();
+    hookBookingsAdmin();
 });

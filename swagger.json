@@ -2,7 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Kizuna Rail API",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "description": "Session authentication: sign in at /login in the same browser, then use Try it out for protected endpoints. The browser sends the connect.sid session cookie automatically. Protected APIs return 401 when logged out and 403 when the logged-in user lacks the required role."
   },
   "paths": {
     "/api/trains": {
@@ -46,6 +47,9 @@
           "200": {
             "description": "An array of trip records"
           },
+          "401": {
+            "description": "Authentication required"
+          },
           "500": {
             "description": "Unexpected server or database error"
           }
@@ -71,6 +75,9 @@
         "responses": {
           "200": {
             "description": "The matching trip record"
+          },
+          "401": {
+            "description": "Authentication required"
           },
           "404": {
             "description": "Trip not found"
@@ -115,6 +122,9 @@
           "400": {
             "description": "Invalid month value"
           },
+          "401": {
+            "description": "Authentication required"
+          },
           "404": {
             "description": "No schedules found for the trip or month"
           },
@@ -133,6 +143,12 @@
         "responses": {
           "200": {
             "description": "An array of booking records"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Administrator role required"
           },
           "500": {
             "description": "Unexpected server or database error"

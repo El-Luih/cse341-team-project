@@ -11,7 +11,8 @@ export const createSwaggerSpec = () => swaggerJsdoc({
     openapi: '3.0.0',
     info: {
       title: 'Kizuna Rail API',
-      version: pkg.version
+      version: pkg.version,
+      description: 'Session authentication: sign in at /login in the same browser, then use Try it out for protected endpoints. The browser sends the connect.sid session cookie automatically. Protected APIs return 401 when logged out and 403 when the logged-in user lacks the required role.'
     }
   },
   apis: [routesFile]

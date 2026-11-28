@@ -3,6 +3,7 @@ import { trainsApi } from '../controllers/trains.js';
 import { getTripById, getAllTrips } from '../controllers/trips.js';
 import { getSchedulesForTrip, getSchedulesForTripAndMonth } from '../controllers/schedules.js';
 import { getAllBookings, processBookingRequest } from '../controllers/bookings.js';
+import { requireApiLogin, requireApiRole } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -40,10 +41,12 @@ router.get('/api/trains', trainsApi);
  *     responses:
  *       200:
  *         description: An array of trip records
+ *       401:
+ *         description: Authentication required
  *       500:
  *         description: Unexpected server or database error
  */
-router.get('/api/trips', getAllTrips);
+router.get('/api/trips', requireApiLogin, getAllTrips);
 
 /**
  * @swagger
@@ -61,12 +64,14 @@ router.get('/api/trips', getAllTrips);
  *     responses:
  *       200:
  *         description: The matching trip record
+ *       401:
+ *         description: Authentication required
  *       404:
  *         description: Trip not found
  *       500:
  *         description: Unexpected server or database error
  */
-router.get('/api/trips/:id', getTripById);
+router.get('/api/trips/:id', requireApiLogin, getTripById);
 
 /**
  * @swagger
@@ -94,12 +99,14 @@ router.get('/api/trips/:id', getTripById);
  *         description: An array of schedule records
  *       400:
  *         description: Invalid month value
+ *       401:
+ *         description: Authentication required
  *       404:
  *         description: No schedules found for the trip or month
  *       500:
  *         description: Unexpected server or database error
  */
-router.get('/api/trips/:id/schedules', (req, res) => {
+router.get('/api/trips/:id/schedules', requireApiLogin, (req, res) => {
   if (req.query.month !== undefined) {
     return getSchedulesForTripAndMonth(req, res);
   }
@@ -116,6 +123,10 @@ router.get('/api/trips/:id/schedules', (req, res) => {
  *     responses:
  *       200:
  *         description: An array of booking records
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Administrator role required
  *       500:
  *         description: Unexpected server or database error
  *   post:
@@ -168,7 +179,7 @@ router.get('/api/trips/:id/schedules', (req, res) => {
  *       500:
  *         description: Unexpected server or database error
  */
-router.get('/api/bookings', getAllBookings);
+router.get('/api/bookings', requireApiRole('admin'), getAllBookings);
 router.post('/api/bookings', processBookingRequest);
 
 export default router;

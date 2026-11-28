@@ -24,6 +24,15 @@ const initializeDatabase = async (db) => {
   }
 
   await db.collection('bookings').createIndex({ id: 1 }, { unique: true });
+
+  const roles = db.collection('roles');
+  for (const name of ['customer', 'admin']) {
+    await roles.updateOne(
+      { name },
+      { $set: { name } },
+      { upsert: true }
+    );
+  }
 };
 
 export { initializeDatabase, starterCollections };

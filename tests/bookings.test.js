@@ -1,26 +1,46 @@
 import { describe, expect, test } from 'vitest';
+import bcrypt from 'bcrypt';
 import request from 'supertest';
 import app from '../app.js';
 import { getDb } from '../src/db/connect.js';
 import { createBooking } from '../src/models/bookings.js';
+import Role from '../src/models/schemas/roles.js';
+import User from '../src/models/schemas/users.js';
 
 describe('Bookings', () => {
-  test('GET /api/bookings returns an array', async () => {
+  test('GET /api/bookings returns 401 when unauthenticated', async () => {
     const response = await request(app).get('/api/bookings');
 
-    expect(response.status).toBe(200);
-    expect(response.headers['content-type']).toContain('application/json');
-    expect(response.body).toBeInstanceOf(Array);
-    expect(response.body).toHaveLength(0);
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'Authentication required' });
   });
 
-  test('GET /bookings-admin renders a client-hydrated shell', async () => {
+  test('GET /api/bookings returns 403 for an authenticated customer', async () => {
+    const customerRole = await Role.findOne({ name: 'customer' });
+    await User.create({
+      name: 'Bookings Customer',
+      username: 'bookings-customer',
+      email: 'bookings-customer@example.com',
+      passwordHash: await bcrypt.hash('password123', 12),
+      role: customerRole._id
+    });
+
+    const customerAgent = request.agent(app);
+    await customerAgent.post('/login').send({
+      email: 'bookings-customer@example.com',
+      password: 'password123'
+    });
+
+    const response = await customerAgent.get('/api/bookings');
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Forbidden' });
+  });
+
+  test('GET /bookings-admin redirects anonymous users to login', async () => {
     const response = await request(app).get('/bookings-admin');
 
-    expect(response.status).toBe(200);
-    expect(response.text).toContain('id="bookings-list"');
-    expect(response.text).toContain('id="booking-row-template"');
-    expect(response.text).not.toContain('JR');
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('/login');
   });
 
   test('GET /trips/bookings/schedule/:scheduleId renders the booking form', async () => {
@@ -33,7 +53,21 @@ describe('Bookings', () => {
   });
 
   test('booking submission stores a booking and keeps confirmation reachable', async () => {
-    const response = await request(app)
+    const adminRole = await Role.findOne({ name: 'admin' });
+    await User.create({
+      name: 'Booking Test Admin',
+      username: 'booking-test-admin',
+      email: 'booking-test-admin@example.com',
+      passwordHash: await bcrypt.hash('password123', 12),
+      role: adminRole._id
+    });
+    const adminAgent = request.agent(app);
+    await adminAgent.post('/login').send({
+      email: 'booking-test-admin@example.com',
+      password: 'password123'
+    });
+
+    const response = await adminAgent
       .post('/api/bookings')
       .send({
         scheduleId: 1,
@@ -66,7 +100,7 @@ describe('Bookings', () => {
       })
     ]);
 
-    const bookingsResponse = await request(app).get('/api/bookings');
+    const bookingsResponse = await adminAgent.get('/api/bookings');
     expect(bookingsResponse.status).toBe(200);
     expect(bookingsResponse.body).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: booking.id })])
@@ -148,5 +182,28 @@ describe('Bookings', () => {
   test('database initialization does not use a confirmations collection', async () => {
     const collections = await getDb().listCollections().toArray();
     expect(collections.map((collection) => collection.name)).not.toContain('confirmations');
+  });
+
+  test('GET /api/bookings requires an authenticated admin', async () => {
+    const adminRole = await Role.findOne({ name: 'admin' });
+    await User.create({
+      name: 'Bookings API Admin',
+      username: 'bookings-api-admin',
+      email: 'bookings-api-admin@example.com',
+      passwordHash: await bcrypt.hash('password123', 12),
+      role: adminRole._id
+    });
+
+    const adminAgent = request.agent(app);
+    await adminAgent.post('/login').send({
+      email: 'bookings-api-admin@example.com',
+      password: 'password123'
+    });
+
+    const response = await adminAgent.get('/api/bookings');
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toContain('application/json');
+    expect(response.body).toBeInstanceOf(Array);
   });
 });
